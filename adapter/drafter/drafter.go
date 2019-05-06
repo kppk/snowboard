@@ -16,7 +16,7 @@ import (
 	"unsafe"
 )
 
-const Version = "v3.2.7"
+const Version = "v4.0.0-pre.4"
 
 type Engine struct{}
 
