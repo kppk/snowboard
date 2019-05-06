@@ -452,9 +452,9 @@ func outputName(c *cli.Context, output string) string {
 	case "html":
 		if output == "" {
 			return "index.html"
-		} else {
-			return output
 		}
+
+		return output
 	}
 
 	return ""
