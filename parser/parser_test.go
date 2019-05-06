@@ -4,38 +4,28 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bukalapak/snowboard/adapter/drafter"
 	snowboard "github.com/bukalapak/snowboard/parser"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
-	testParse(t, drafter.Engine{})
-}
-
-func TestParseAsJSON(t *testing.T) {
-	testParseAsJSON(t, drafter.Engine{})
-}
-
-func testParse(t *testing.T, parser snowboard.Parser) {
 	s := strings.NewReader("# API")
 
-	api, err := snowboard.Parse(s, parser)
+	api, err := snowboard.Parse(s)
 	assert.Nil(t, err)
 	assert.Equal(t, "API", api.Title)
 }
 
-func testParseAsJSON(t *testing.T, parser snowboard.Parser) {
+func TestParseAsJSON(t *testing.T) {
 	s := strings.NewReader("# API")
 
-	b, err := snowboard.ParseAsJSON(s, parser)
+	b, err := snowboard.ParseAsJSON(s)
 	assert.Nil(t, err)
 	assert.Contains(t, string(b), `"title": "API"`)
 }
 
 func TestLoad(t *testing.T) {
-	engine := drafter.Engine{}
-	api, err := snowboard.Load("../adapter/drafter/ext/drafter/features/fixtures/blueprint.apib", engine)
+	api, err := snowboard.Load("../adapter/drafter/ext/drafter/features/fixtures/blueprint.apib")
 	assert.Nil(t, err)
 	assert.Equal(t, "<API name>", api.Title)
 	assert.Equal(t, "<resource group name>", api.ResourceGroups[0].Title)
@@ -46,14 +36,14 @@ func TestLoad(t *testing.T) {
 	assert.Equal(t, 200, api.ResourceGroups[0].Resources[0].Transitions[0].Transactions[0].Response.StatusCode)
 	assert.Equal(t, "<response description>", api.ResourceGroups[0].Resources[0].Transitions[0].Transactions[0].Response.Description)
 
-	api, err = snowboard.Load("../fixtures/api-blueprint/examples/10. Data Structures.md", engine)
+	api, err = snowboard.Load("../fixtures/api-blueprint/examples/10. Data Structures.md")
 	assert.Nil(t, err)
 	assert.False(t, api.ResourceGroups[0].Resources[1].Transitions[0].Href.Parameters[0].Required)
 	assert.Equal(t, "limit", api.ResourceGroups[0].Resources[1].Transitions[0].Href.Parameters[0].Key)
 	assert.Equal(t, "number", api.ResourceGroups[0].Resources[1].Transitions[0].Href.Parameters[0].Kind)
 	assert.Equal(t, "10", api.ResourceGroups[0].Resources[1].Transitions[0].Href.Parameters[0].Default)
 
-	api, err = snowboard.Load("../fixtures/examples/enum.apib", engine)
+	api, err = snowboard.Load("../fixtures/examples/enum.apib")
 	assert.Nil(t, err)
 	assert.True(t, api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Required)
 	assert.Equal(t, "type", api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Key)
@@ -63,8 +53,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoad_partials(t *testing.T) {
-	engine := drafter.Engine{}
-	api, err := snowboard.Load("../fixtures/partials/API.apib", engine)
+	api, err := snowboard.Load("../fixtures/partials/API.apib")
 	assert.Nil(t, err)
 	assert.Equal(t, "API", api.Title)
 	assert.Equal(t, "Messages", api.ResourceGroups[0].Title)
@@ -73,8 +62,7 @@ func TestLoad_partials(t *testing.T) {
 }
 
 func TestLoadAsJSON(t *testing.T) {
-	engine := drafter.Engine{}
-	b, err := snowboard.LoadAsJSON("../adapter/drafter/ext/drafter/features/fixtures/blueprint.apib", engine)
+	b, err := snowboard.LoadAsJSON("../adapter/drafter/ext/drafter/features/fixtures/blueprint.apib")
 	assert.Nil(t, err)
 	assert.Contains(t, string(b), `"title": "<API name>"`)
 }

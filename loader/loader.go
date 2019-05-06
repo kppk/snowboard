@@ -1,4 +1,4 @@
-package parser
+package loader
 
 import (
 	"bufio"
@@ -151,8 +151,24 @@ func join(ss []interface{}, s string) string {
 	return strings.Join(xs, s)
 }
 
-// Read reads API blueprint from file as bytes
-func Read(name string) ([]byte, error) {
+func process(s string, data interface{}, funcMap template.FuncMap) ([]byte, error) {
+	tmpl, err := template.New("apib").Funcs(sprig.TxtFuncMap()).Funcs(funcMap).Parse(s)
+	if err != nil {
+		return nil, err
+	}
+
+	z := bytes.NewBufferString("")
+
+	err = tmpl.Execute(z, data)
+	if err != nil {
+		return nil, err
+	}
+
+	return z.Bytes(), nil
+}
+
+// Load loads API blueprint from file as bytes
+func Load(name string) ([]byte, error) {
 	d := newLoader(name)
 
 	s, err := d.parse()
@@ -182,22 +198,6 @@ func Read(name string) ([]byte, error) {
 	}
 
 	return b, nil
-}
-
-func process(s string, data interface{}, funcMap template.FuncMap) ([]byte, error) {
-	tmpl, err := template.New("apib").Funcs(sprig.TxtFuncMap()).Funcs(funcMap).Parse(s)
-	if err != nil {
-		return nil, err
-	}
-
-	z := bytes.NewBufferString("")
-
-	err = tmpl.Execute(z, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return z.Bytes(), nil
 }
 
 // Seeds lists filenames of API blueprint's seeds.

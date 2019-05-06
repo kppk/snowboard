@@ -5,18 +5,14 @@ import (
 	"bytes"
 	"io"
 
+	"github.com/bukalapak/snowboard/adapter/drafter"
 	"github.com/bukalapak/snowboard/api"
+	"github.com/bukalapak/snowboard/loader"
 )
 
-type Parser interface {
-	Parse(r io.Reader) ([]byte, error)
-	Validate(r io.Reader) ([]byte, error)
-	Version() string
-}
-
-// Parse formats API blueprint as blueprint.API struct using selected Parser
-func Parse(r io.Reader, engine Parser) (*api.API, error) {
-	el, err := parseElement(r, engine)
+// Parse formats API blueprint as blueprint.API struct
+func Parse(r io.Reader) (*api.API, error) {
+	el, err := parseElement(r)
 	if err != nil {
 		return nil, err
 	}
@@ -25,13 +21,13 @@ func Parse(r io.Reader, engine Parser) (*api.API, error) {
 }
 
 // ParseAsJSON parse API blueprint as API Element JSON
-func ParseAsJSON(r io.Reader, engine Parser) ([]byte, error) {
-	return engine.Parse(r)
+func ParseAsJSON(r io.Reader) ([]byte, error) {
+	return drafter.Parse(r)
 }
 
-// Validate validates API blueprint using selected Parser
-func Validate(r io.Reader, engine Parser) (*api.API, error) {
-	el, err := validateElement(r, engine)
+// Validate validates API blueprint
+func Validate(r io.Reader) (*api.API, error) {
+	el, err := validateElement(r)
 	if err == nil && el.Object() == nil {
 		return nil, nil
 	}
@@ -43,28 +39,28 @@ func Validate(r io.Reader, engine Parser) (*api.API, error) {
 	return api.NewAPI(el)
 }
 
-// Load reads API blueprint from file as blueprint.API struct using selected Parser
-func Load(name string, engine Parser) (*api.API, error) {
-	b, err := Read(name)
+// Load reads API blueprint from file as blueprint.API struct
+func Load(name string) (*api.API, error) {
+	b, err := loader.Load(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return Parse(bytes.NewReader(b), engine)
+	return Parse(bytes.NewReader(b))
 }
 
-// LoadAsJSON reads API blueprint from file as API Element JSON using selected Parser
-func LoadAsJSON(name string, engine Parser) ([]byte, error) {
-	b, err := Read(name)
+// LoadAsJSON reads API blueprint from file as API Element JSON
+func LoadAsJSON(name string) ([]byte, error) {
+	b, err := loader.Load(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return ParseAsJSON(bytes.NewReader(b), engine)
+	return ParseAsJSON(bytes.NewReader(b))
 }
 
-func parseElement(r io.Reader, engine Parser) (*api.Element, error) {
-	b, err := ParseAsJSON(r, engine)
+func parseElement(r io.Reader) (*api.Element, error) {
+	b, err := ParseAsJSON(r)
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +68,8 @@ func parseElement(r io.Reader, engine Parser) (*api.Element, error) {
 	return api.ParseJSON(bytes.NewReader(b))
 }
 
-func validateElement(r io.Reader, engine Parser) (*api.Element, error) {
-	b, err := engine.Validate(r)
+func validateElement(r io.Reader) (*api.Element, error) {
+	b, err := drafter.Validate(r)
 	if err != nil {
 		return nil, err
 	}
