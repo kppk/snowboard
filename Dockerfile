@@ -1,12 +1,12 @@
-FROM golang:1.9 AS builder
+FROM golang:1.12-stretch AS builder
 MAINTAINER Alif Rachmawadi <subosito@bukalapak.com>
 
-COPY . /go/src/github.com/bukalapak/snowboard
-RUN cd /go/src/github.com/bukalapak/snowboard \
- && make build
+WORKDIR /app
+COPY . .
+RUN make build
 
 FROM debian:stretch-slim
-COPY --from=builder /go/src/github.com/bukalapak/snowboard/snowboard /usr/local/bin
+COPY --from=builder /app/snowboard /usr/local/bin
 
 RUN apt-get -y update \
  && apt-get -y install --no-install-recommends inotify-tools \
