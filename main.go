@@ -16,6 +16,7 @@ import (
 
 	"github.com/bukalapak/snowboard/adapter/drafter"
 	"github.com/bukalapak/snowboard/api"
+	"github.com/bukalapak/snowboard/loader"
 	"github.com/bukalapak/snowboard/mock"
 	snowboard "github.com/bukalapak/snowboard/parser"
 	"github.com/bukalapak/snowboard/render"
@@ -28,15 +29,12 @@ import (
 
 var (
 	versionStr string
-	engine     snowboard.Parser
 )
 
 func main() {
-	engine = drafter.Engine{}
-
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Fprintf(c.App.Writer, "Snowboard version: %s\n", c.App.Version)
-		fmt.Fprintf(c.App.Writer, "Drafter version: %s\n", engine.Version())
+		fmt.Fprintf(c.App.Writer, "Drafter version: %s\n", drafter.Version())
 	}
 
 	if versionStr == "" {
@@ -302,7 +300,7 @@ func readTemplate(fn string) ([]byte, error) {
 }
 
 func renderHTML(c *cli.Context, input, output, tplFile string) error {
-	bp, err := snowboard.Load(input, engine)
+	bp, err := snowboard.Load(input)
 	if err != nil {
 		return err
 	}
@@ -342,7 +340,7 @@ func renderHTML(c *cli.Context, input, output, tplFile string) error {
 }
 
 func renderAPIB(c *cli.Context, input, output string) error {
-	b, err := snowboard.Read(input)
+	b, err := loader.Load(input)
 	if err != nil {
 		return err
 	}
@@ -371,7 +369,7 @@ func renderAPIB(c *cli.Context, input, output string) error {
 }
 
 func renderJSON(c *cli.Context, input, output string) error {
-	b, err := snowboard.LoadAsJSON(input, engine)
+	b, err := snowboard.LoadAsJSON(input)
 	if err != nil {
 		return err
 	}
@@ -400,14 +398,14 @@ func renderJSON(c *cli.Context, input, output string) error {
 }
 
 func validate(c *cli.Context, input string) error {
-	b, err := snowboard.Read(input)
+	b, err := loader.Load(input)
 	if err != nil {
 		return xerrors.Wrap(err, "read failed")
 	}
 
 	bf := bytes.NewReader(b)
 
-	out, err := snowboard.Validate(bf, engine)
+	out, err := snowboard.Validate(bf)
 	if err != nil {
 		return err
 	}
@@ -561,7 +559,7 @@ func watchFiles(c *cli.Context, watcher fsWatcher, input, tplFile string) error 
 		}
 	}
 
-	for _, s := range snowboard.Seeds(input) {
+	for _, s := range loader.Seeds(input) {
 		if err := watcher.Add(s); err != nil {
 			return err
 		}
@@ -573,7 +571,7 @@ func watchFiles(c *cli.Context, watcher fsWatcher, input, tplFile string) error 
 func outputPath(c *cli.Context, inputs []string) error {
 	bs := make([]*api.API, len(inputs))
 	for i := range inputs {
-		bp, err := snowboard.Load(inputs[i], engine)
+		bp, err := snowboard.Load(inputs[i])
 		if err != nil {
 			return err
 		}
@@ -603,7 +601,7 @@ func serveMock(c *cli.Context, bind string, inputs []string) error {
 	bs := make([]*api.API, len(inputs))
 
 	for i := range inputs {
-		bp, err := snowboard.Load(inputs[i], engine)
+		bp, err := snowboard.Load(inputs[i])
 		if err != nil {
 			return err
 		}
