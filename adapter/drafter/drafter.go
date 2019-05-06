@@ -16,11 +16,7 @@ import (
 	"unsafe"
 )
 
-const Version = "v4.0.0-pre.4"
-
-type Engine struct{}
-
-func (e Engine) Parse(r io.Reader) ([]byte, error) {
+func Parse(r io.Reader) ([]byte, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -37,10 +33,10 @@ func (e Engine) Parse(r io.Reader) ([]byte, error) {
 
 	C.free(unsafe.Pointer(cSource))
 
-	return e.serialize(cResult), nil
+	return serialize(cResult), nil
 }
 
-func (e Engine) Validate(r io.Reader) ([]byte, error) {
+func Validate(r io.Reader) ([]byte, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -57,14 +53,14 @@ func (e Engine) Validate(r io.Reader) ([]byte, error) {
 
 	C.free(unsafe.Pointer(cSource))
 
-	return e.serialize(cResult), nil
+	return serialize(cResult), nil
 }
 
-func (e Engine) Version() string {
+func Version() string {
 	return C.GoString(C.drafter_version_string())
 }
 
-func (e Engine) serialize(r *C.drafter_result) []byte {
+func serialize(r *C.drafter_result) []byte {
 	options := C.drafter_serialize_options{sourcemap: false, format: C.DRAFTER_SERIALIZE_JSON}
 	cResult := C.drafter_serialize(r, options)
 	results := C.GoString(cResult)
