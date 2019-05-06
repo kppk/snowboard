@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/bukalapak/snowboard/adapter/drafter"
-	"github.com/bukalapak/snowboard/adapter/drafterc"
 	"github.com/bukalapak/snowboard/api"
 	"github.com/bukalapak/snowboard/mock"
 	snowboard "github.com/bukalapak/snowboard/parser"
@@ -27,15 +26,13 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
-var versionStr string
 var (
-	engine  snowboard.Parser
-	engineC snowboard.Parser
+	versionStr string
+	engine     snowboard.Parser
 )
 
 func main() {
 	engine = drafter.Engine{}
-	engineC = drafterc.Engine{}
 
 	cli.VersionPrinter = func(c *cli.Context) {
 		fmt.Fprintf(c.App.Writer, "Snowboard version: %s\n", c.App.Version)
@@ -71,18 +68,12 @@ func main() {
 		{
 			Name:  "lint",
 			Usage: "Validate API blueprint",
-			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "c",
-					Usage: "Use character index instead of line and row number",
-				},
-			},
 			Action: func(c *cli.Context) error {
 				if c.Args().Get(0) == "" {
 					return nil
 				}
 
-				if err := validate(c, c.Args().Get(0), c.Bool("c")); err != nil {
+				if err := validate(c, c.Args().Get(0)); err != nil {
 					if strings.Contains(err.Error(), "read failed") {
 						return xerrors.Cause(err)
 					}
@@ -223,7 +214,7 @@ func main() {
 			},
 		},
 		{
-			Name: "list",
+			Name:  "list",
 			Usage: "List available routes",
 			Action: func(c *cli.Context) error {
 				if c.Args().Get(0) == "" {
@@ -408,7 +399,7 @@ func renderJSON(c *cli.Context, input, output string) error {
 	return nil
 }
 
-func validate(c *cli.Context, input string, charIdx bool) error {
+func validate(c *cli.Context, input string) error {
 	b, err := snowboard.Read(input)
 	if err != nil {
 		return xerrors.Wrap(err, "read failed")
@@ -416,62 +407,32 @@ func validate(c *cli.Context, input string, charIdx bool) error {
 
 	bf := bytes.NewReader(b)
 
-	if charIdx {
-		out, err := snowboard.Validate(bf, engine)
-		if err != nil {
-			return err
+	out, err := snowboard.Validate(bf, engine)
+	if err != nil {
+		return err
+	}
+
+	if out == nil {
+		fmt.Fprintln(c.App.Writer, "OK")
+		return nil
+	}
+
+	var buf bytes.Buffer
+
+	s := "--------"
+	w := tabwriter.NewWriter(&buf, 8, 0, 0, ' ', tabwriter.Debug)
+	fmt.Fprintln(w, "Char Index\tDescription")
+	fmt.Fprintf(w, "%s\t%s\n", s, strings.Repeat(s, 8))
+
+	for _, n := range out.Annotations {
+		for _, m := range n.SourceMaps {
+			fmt.Fprintf(w, "%d:%d\t%s\n", m.Row, m.Col, n.Description)
 		}
+	}
 
-		if out == nil {
-			fmt.Fprintln(c.App.Writer, "OK")
-			return nil
-		}
+	w.Flush()
 
-		var buf bytes.Buffer
-
-		s := "--------"
-		w := tabwriter.NewWriter(&buf, 8, 0, 0, ' ', tabwriter.Debug)
-		fmt.Fprintln(w, "Char Index\tDescription")
-		fmt.Fprintf(w, "%s\t%s\n", s, strings.Repeat(s, 8))
-
-		for _, n := range out.Annotations {
-			for _, m := range n.SourceMaps {
-				fmt.Fprintf(w, "%d:%d\t%s\n", m.Row, m.Col, n.Description)
-			}
-		}
-
-		w.Flush()
-
-		if len(out.Annotations) > 0 {
-			return errors.New(buf.String())
-		}
-	} else {
-		b, err := engineC.Validate(bf)
-		if err != nil {
-			return err
-		}
-
-		var buf bytes.Buffer
-
-		w := tabwriter.NewWriter(&buf, 8, 0, 0, ' ', tabwriter.Debug)
-		fmt.Fprintln(w, "Location\tSeverity\tDescription")
-
-		fmt.Fprintf(w, "%s\t%s\t%s\n", dash(42), dash(16), dash(80))
-
-		if string(b) == "" {
-			fmt.Fprintln(c.App.Writer, "OK")
-			return nil
-		}
-
-		ns := strings.Split(string(b), "\n")
-
-		for _, n := range ns {
-			nn := strings.SplitN(n, "; ", 2)
-			mm := strings.SplitN(nn[0], "  ", 2)
-			fmt.Fprintf(w, "%s\t%s\t%s\n", nn[1], mm[0], mm[1])
-		}
-
-		w.Flush()
+	if len(out.Annotations) > 0 {
 		return errors.New(buf.String())
 	}
 
