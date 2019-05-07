@@ -20,9 +20,7 @@ import (
 	"github.com/bukalapak/snowboard/mock"
 	snowboard "github.com/bukalapak/snowboard/parser"
 	"github.com/bukalapak/snowboard/render"
-	"github.com/fsnotify/fsnotify"
 	xerrors "github.com/pkg/errors"
-	pWatcher "github.com/radovskyb/watcher"
 	"github.com/rs/cors"
 	cli "gopkg.in/urfave/cli.v1"
 )
@@ -51,16 +49,6 @@ func main() {
 		}
 
 		return nil
-	}
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "watch, w",
-			Usage: "Watch for the files changes",
-		},
-		cli.StringFlag{
-			Name:  "watch-interval, n",
-			Usage: "Set watch interval. This activates polling watcher. Accepted format like: 100ms, 1s, etc",
-		},
 	}
 	app.Commands = []cli.Command{
 		{
@@ -114,28 +102,6 @@ func main() {
 					return nil
 				}
 
-				if c.GlobalBool("watch") {
-					cerr := make(chan error, 1)
-
-					go func() {
-						if err := renderHTML(c, c.Args().Get(0), c.String("o"), c.String("t")); err != nil {
-							cerr <- cli.NewExitError(err.Error(), 1)
-						}
-
-						if c.Bool("s") {
-							if err := serveHTML(c, c.String("b"), c.String("o")); err != nil {
-								cerr <- cli.NewExitError(err.Error(), 1)
-							}
-						}
-
-						cli.HandleExitCoder(<-cerr)
-					}()
-
-					if err := appWatcher(c); err != nil {
-						return err
-					}
-				}
-
 				if err := renderHTML(c, c.Args().Get(0), c.String("o"), c.String("t")); err != nil {
 					return cli.NewExitError(err.Error(), 1)
 				}
@@ -167,12 +133,6 @@ func main() {
 					return nil
 				}
 
-				if c.GlobalBool("watch") {
-					if err := appWatcher(c); err != nil {
-						return err
-					}
-				}
-
 				if err := renderAPIB(c, c.Args().Get(0), c.String("o")); err != nil {
 					return cli.NewExitError(err.Error(), 1)
 				}
@@ -196,12 +156,6 @@ func main() {
 			Action: func(c *cli.Context) error {
 				if c.Args().Get(0) == "" {
 					return nil
-				}
-
-				if c.GlobalBool("watch") {
-					if err := appWatcher(c); err != nil {
-						return err
-					}
 				}
 
 				if err := renderJSON(c, c.Args().Get(0), c.String("o")); err != nil {
@@ -249,25 +203,6 @@ func main() {
 	}
 
 	app.Run(os.Args)
-}
-
-func appWatcher(c *cli.Context) error {
-	if n := c.GlobalString("watch-interval"); n != "" {
-		d, err := time.ParseDuration(n)
-		if err != nil {
-			return cli.NewExitError(fmt.Errorf("invalid value for `watch-interval`: %s", err), 1)
-		}
-
-		if err := watchInterval(c, c.Args().Get(0), c.String("o"), c.String("t"), d); err != nil {
-			return cli.NewExitError(err.Error()+"\n", 1)
-		}
-	} else {
-		if err := watch(c, c.Args().Get(0), c.String("o"), c.String("t")); err != nil {
-			return cli.NewExitError(err.Error()+"\n", 1)
-		}
-	}
-
-	return nil
 }
 
 func readFile(fn string) ([]byte, error) {
@@ -470,97 +405,6 @@ func actionCommand(c *cli.Context, input, output, tplFile string) error {
 		}
 	case "json":
 		if err := renderJSON(c, input, output); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func watch(c *cli.Context, input, output, tplFile string) error {
-	output = outputName(c, output)
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-	defer watcher.Close()
-
-	done := make(chan bool)
-
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					if err := actionCommand(c, input, output, tplFile); err != nil {
-						fmt.Fprintln(c.App.Writer, err)
-					}
-				}
-			case err := <-watcher.Errors:
-				fmt.Fprintln(c.App.Writer, err)
-			}
-		}
-	}()
-
-	if err := watchFiles(c, watcher, input, tplFile); err != nil {
-		return err
-	}
-
-	<-done
-
-	return nil
-}
-
-func watchInterval(c *cli.Context, input, output, tplFile string, interval time.Duration) error {
-	output = outputName(c, output)
-
-	watcher := pWatcher.New()
-	defer watcher.Close()
-
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Event:
-				if event.Op&pWatcher.Write == pWatcher.Write {
-					if err := actionCommand(c, input, output, tplFile); err != nil {
-						fmt.Fprintln(c.App.Writer, err)
-					}
-				}
-			case err := <-watcher.Error:
-				fmt.Fprintln(c.App.Writer, err)
-			case <-watcher.Closed:
-				return
-			}
-		}
-	}()
-
-	if err := watchFiles(c, watcher, input, tplFile); err != nil {
-		return err
-	}
-
-	if err := watcher.Start(interval); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func watchFiles(c *cli.Context, watcher fsWatcher, input, tplFile string) error {
-	if err := watcher.Add(input); err != nil {
-		return err
-	}
-
-	if tplFile != "" {
-		if _, err := os.Stat(tplFile); err == nil {
-			if err = watcher.Add(tplFile); err != nil {
-				return err
-			}
-		}
-	}
-
-	for _, s := range loader.Seeds(input) {
-		if err := watcher.Add(s); err != nil {
 			return err
 		}
 	}

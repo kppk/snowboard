@@ -8,7 +8,6 @@ require (
 	github.com/Masterminds/sprig v2.14.1+incompatible
 	github.com/aokoli/goutils v1.0.1 // indirect
 	github.com/davecgh/go-spew v0.0.0-20170829195320-a47672248388 // indirect
-	github.com/fsnotify/fsnotify v0.0.0-20170329110642-4da3e2cfbabc
 	github.com/gosimple/slug v1.1.1
 	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/imdario/mergo v0.0.0-20160216103600-3e95a51e0639
@@ -18,7 +17,6 @@ require (
 	github.com/naoina/denco v0.0.0-20161005111611-a2656d3ed566
 	github.com/pkg/errors v0.0.0-20170505043639-c605e284fe17
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/radovskyb/watcher v1.0.2
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
 	github.com/rs/cors v0.0.0-20180524071409-694cf2ad010f
 	github.com/satori/go.uuid v1.2.0 // indirect
