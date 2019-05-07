@@ -84,15 +84,6 @@ func main() {
 					Usage: "Template for HTML documentation",
 				},
 				cli.BoolFlag{
-					Name:  "s",
-					Usage: "Serve HTML via HTTP server",
-				},
-				cli.StringFlag{
-					Name:  "b",
-					Value: ":8088",
-					Usage: "HTTP server listen address",
-				},
-				cli.BoolFlag{
 					Name:  "q",
 					Usage: "Quiet mode",
 				},
@@ -106,10 +97,35 @@ func main() {
 					return cli.NewExitError(err.Error(), 1)
 				}
 
-				if c.Bool("s") {
-					if err := serveHTML(c, c.String("b"), c.String("o")); err != nil {
-						return cli.NewExitError(err.Error(), 1)
-					}
+				return nil
+			},
+		},
+		{
+			Name:  "http",
+			Usage: "HTML documentation via HTTP server",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "t",
+					Value: "alpha",
+					Usage: "Template for HTML documentation",
+				},
+				cli.StringFlag{
+					Name:  "b",
+					Value: ":8088",
+					Usage: "HTTP server listen address",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				if c.Args().Get(0) == "" {
+					return nil
+				}
+
+				if err := renderHTML(c, c.Args().Get(0), "index.html", c.String("t")); err != nil {
+					return cli.NewExitError(err.Error(), 1)
+				}
+
+				if err := serveHTML(c, c.String("b"), "index.html"); err != nil {
+					return cli.NewExitError(err.Error(), 1)
 				}
 
 				return nil
