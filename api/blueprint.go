@@ -6,6 +6,7 @@ type API struct {
 	Metadata       []Metadata
 	ResourceGroups []ResourceGroup
 	Annotations    []Annotation
+	Resources      []*Resource
 }
 
 type Metadata struct {

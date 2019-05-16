@@ -21,7 +21,7 @@ require (
 	github.com/rs/cors v0.0.0-20180524071409-694cf2ad010f
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/stretchr/testify v0.0.0-20170809224252-890a5c3458b4
-	golang.org/x/tools v0.0.0-20190506145303-2d16b83fe98c // indirect
+	golang.org/x/tools v0.0.0-20190513222433-de15caf06883 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/urfave/cli.v1 v1.20.0
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0 // indirect

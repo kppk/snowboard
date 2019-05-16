@@ -21,7 +21,7 @@ func TestParseAsJSON(t *testing.T) {
 
 	b, err := snowboard.ParseAsJSON(s)
 	assert.Nil(t, err)
-	assert.Contains(t, string(b), `"title": "API"`)
+	assert.Contains(t, string(b), `"content": "API"`)
 }
 
 func TestLoad(t *testing.T) {
@@ -45,11 +45,11 @@ func TestLoad(t *testing.T) {
 
 	api, err = snowboard.Load("../fixtures/examples/enum.apib")
 	assert.Nil(t, err)
-	assert.True(t, api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Required)
-	assert.Equal(t, "type", api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Key)
-	assert.Equal(t, "enum[string]", api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Kind)
-	assert.Equal(t, "foo", api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Value)
-	assert.Equal(t, []string{"foo", "bar", "baz"}, api.ResourceGroups[0].Resources[0].Transitions[0].Href.Parameters[0].Members)
+	assert.True(t, api.Resources[0].Transitions[0].Href.Parameters[0].Required)
+	assert.Equal(t, "type", api.Resources[0].Transitions[0].Href.Parameters[0].Key)
+	assert.Equal(t, "enum[string]", api.Resources[0].Transitions[0].Href.Parameters[0].Kind)
+	assert.Equal(t, "foo", api.Resources[0].Transitions[0].Href.Parameters[0].Value)
+	assert.Equal(t, []string{"foo", "bar", "baz"}, api.Resources[0].Transitions[0].Href.Parameters[0].Members)
 }
 
 func TestLoad_partials(t *testing.T) {
@@ -64,5 +64,5 @@ func TestLoad_partials(t *testing.T) {
 func TestLoadAsJSON(t *testing.T) {
 	b, err := snowboard.LoadAsJSON("../adapter/drafter/ext/drafter/features/fixtures/blueprint.apib")
 	assert.Nil(t, err)
-	assert.Contains(t, string(b), `"title": "<API name>"`)
+	assert.Contains(t, string(b), `"content": "<API name>"`)
 }

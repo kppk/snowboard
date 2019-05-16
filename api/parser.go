@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -51,6 +50,7 @@ func (a *API) digElements(el *Element) {
 			a.digMetadata(el)
 			a.digResourceGroups(el)
 			a.digHelperAttributes()
+			a.digResources(el)
 		}
 	case "annotation":
 		a.digAnnotation(el)
@@ -71,24 +71,32 @@ func (a *API) digAnnotation(el *Element) {
 }
 
 func (n *Annotation) digSourceMaps(el *Element) {
-	children, err := el.Children()
+	children, err := el.Path("content").Children()
 	if err != nil {
 		return
 	}
 
 	for _, child := range children {
-		cx := child.Path("content").Value()
 
-		if cx.IsValid() && cx.Kind() == reflect.Slice {
-			for i := 0; i < cx.Len(); i++ {
-				ns := [2]int{}
+		if child.Path("element").String() != "sourceMap" {
+			continue
+		}
 
-				for j, n := range cx.Index(i).Interface().([]interface{}) {
-					ns[j] = int(n.(float64))
-				}
+		sm, err := child.Path("content").Children()
+		if err != nil {
+			return
+		}
 
-				m := SourceMap{Row: ns[0], Col: ns[1]}
-				n.SourceMaps = append(n.SourceMaps, m)
+		for _, s := range sm {
+			mm, err := s.Path("content").Children()
+			if err != nil {
+				continue
+			}
+
+			for _, m := range mm {
+				ln := extractInt("attributes.line.content", m)
+				co := extractInt("attributes.column.content", m)
+				n.SourceMaps = append(n.SourceMaps, SourceMap{Row: ln, Col: co})
 			}
 		}
 	}
@@ -96,7 +104,7 @@ func (n *Annotation) digSourceMaps(el *Element) {
 
 func (a *API) digTitle(el *Element) {
 	if hasClass("api", el) {
-		a.Title = el.Path("meta.title").String()
+		a.Title = el.Path("meta.title.content").String()
 	}
 }
 
@@ -125,13 +133,21 @@ func (a *API) digResourceGroups(el *Element) {
 
 	for _, child := range children {
 		g := &ResourceGroup{
-			Title:       child.Path("meta.title").String(),
+			Title:       child.Path("meta.title.content").String(),
 			Description: extractCopy(child),
 		}
 
 		g.digResources(child)
 		a.ResourceGroups = append(a.ResourceGroups, *g)
 	}
+
+	g := &ResourceGroup{
+		Title:       "test",
+		Description: "none",
+	}
+
+	g.digResources(el)
+
 }
 
 func (a *API) Host() string {
@@ -156,7 +172,15 @@ func (a *API) digHelperAttributes() {
 	}
 }
 
+func (a *API) digResources(el *Element) {
+	a.Resources = extractResource(el)
+}
+
 func (g *ResourceGroup) digResources(el *Element) {
+	g.Resources = extractResource(el)
+}
+
+func extractResource(el *Element) []*Resource {
 	children := filterContentByElement("resource", el)
 
 	cr := make(chan *Resource)
@@ -164,11 +188,11 @@ func (g *ResourceGroup) digResources(el *Element) {
 	rs := make([]*Resource, len(children))
 
 	for i, child := range children {
-		oc[i] = child.Path("meta.title").String()
+		oc[i] = child.Path("meta.title.content").String()
 
 		go func(c *Element) {
 			r := &Resource{
-				Title:       c.Path("meta.title").String(),
+				Title:       c.Path("meta.title.content").String(),
 				Description: extractCopy(c),
 				Href:        extractHrefs(c),
 			}
@@ -189,7 +213,7 @@ func (g *ResourceGroup) digResources(el *Element) {
 		}
 	}
 
-	g.Resources = rs
+	return rs
 }
 
 func (r *Resource) digTransitions(el *Element) {
@@ -197,7 +221,7 @@ func (r *Resource) digTransitions(el *Element) {
 
 	for _, child := range children {
 		t := &Transition{
-			Title:       child.Path("meta.title").String(),
+			Title:       child.Path("meta.title.content").String(),
 			Description: extractCopy(child),
 			Href:        extractHrefs(child),
 		}
@@ -237,9 +261,9 @@ func (t *Transition) digTransaction(el []*Element) Transaction {
 }
 
 func (x *Transaction) digRequest(child *Element) {
-	x.Request.Title = child.Path("meta.title").String()
+	x.Request.Title = child.Path("meta.title.content").String()
 	x.Request.Description = extractCopy(child)
-	x.Request.Method = child.Path("attributes.method").String()
+	x.Request.Method = child.Path("attributes.method.content").String()
 	x.Request.Headers = extractHeaders(child.Path("attributes.headers"))
 
 	cx, err := child.Path("content").Children()
@@ -259,7 +283,7 @@ func (x *Transaction) digRequest(child *Element) {
 }
 
 func (x *Transaction) digResponse(child *Element) {
-	x.Response.StatusCode = extractInt("attributes.statusCode", child)
+	x.Response.StatusCode = extractInt("attributes.statusCode.content", child)
 	x.Response.Headers = extractHeaders(child.Path("attributes.headers"))
 	x.Response.Description = extractCopy(child)
 
@@ -302,7 +326,7 @@ func extractHeaders(child *Element) (hs []Header) {
 }
 
 func extractHrefs(child *Element) (h Href) {
-	href := child.Path("attributes.href")
+	href := child.Path("attributes.href.content")
 
 	if href.Value().IsValid() {
 		h.Path = href.String()
@@ -314,8 +338,8 @@ func extractHrefs(child *Element) (h Href) {
 	}
 
 	for _, content := range contents {
-		kind := content.Path("meta.title").String()
-		value := content.Path("content.value.content").String()
+		kind := content.Path("meta.title.content").String()
+		value := content.Path("content.value.content.content").String()
 		members := []string{}
 
 		if content.Path("content.value.element").String() == "enum" {
@@ -328,7 +352,7 @@ func extractHrefs(child *Element) (h Href) {
 				value = samples[0].Path("content").String()
 			}
 
-			values, err := content.Path("content.value.content").FlatChildren()
+			values, err := content.Path("content.value.attributes.enumerations.content").FlatChildren()
 			if err == nil && len(values) > 0 {
 				for i := range values {
 					members = append(members, values[i].Path("content").String())
@@ -343,8 +367,8 @@ func extractHrefs(child *Element) (h Href) {
 			Key:         content.Path("content.key.content").String(),
 			Value:       value,
 			Kind:        kind,
-			Description: content.Path("meta.description").String(),
-			Default:     content.Path("content.value.attributes.default").String(),
+			Description: content.Path("meta.description.content").String(),
+			Default:     content.Path("content.value.attributes.default.content").String(),
 			Members:     members,
 		}
 
@@ -370,14 +394,16 @@ func hasClass(s string, child *Element) bool {
 }
 
 func isContains(key, s string, child *Element) bool {
-	v := child.Path(key).Value()
+	v := child.Path(key)
 
-	if !v.IsValid() {
+	children, err := v.Path("content").Children()
+	if err != nil {
 		return false
 	}
 
-	for i := 0; i < v.Len(); i++ {
-		if s == v.Index(i).Interface().(string) {
+	for _, child := range children {
+		if child.Path("element").String() == "string" &&
+			child.Path("content").String() == s {
 			return true
 		}
 	}
@@ -402,14 +428,17 @@ func extractCopy(el *Element) string {
 
 func extractSliceString(key string, child *Element) []string {
 	x := []string{}
-	v := child.Path(key).Value()
+	v := child.Path(key)
 
-	if !v.IsValid() {
+	children, err := v.Path("content").Children()
+	if err != nil {
 		return x
 	}
 
-	for i := 0; i < v.Len(); i++ {
-		x = append(x, v.Index(i).Interface().(string))
+	for _, child := range children {
+		if child.Path("element").String() == "string" {
+			x = append(x, child.Path("content").String())
+		}
 	}
 
 	return x
