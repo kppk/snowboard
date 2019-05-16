@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bukalapak/snowboard/api"
 	"github.com/gosimple/slug"
+	"github.com/kppk/snowboard/api"
 	"github.com/miekg/mmark"
 )
 

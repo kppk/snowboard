@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bukalapak/snowboard/api"
+	"github.com/kppk/snowboard/api"
 	"github.com/naoina/denco"
 )
 

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	snowboard "github.com/bukalapak/snowboard/parser"
+	snowboard "github.com/kppk/snowboard/parser"
 	"github.com/stretchr/testify/assert"
 )
 

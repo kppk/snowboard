@@ -5,9 +5,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/bukalapak/snowboard/adapter/drafter"
-	"github.com/bukalapak/snowboard/api"
-	"github.com/bukalapak/snowboard/loader"
+	"github.com/kppk/snowboard/adapter/drafter"
+	"github.com/kppk/snowboard/api"
+	"github.com/kppk/snowboard/loader"
 )
 
 // Parse formats API blueprint as blueprint.API struct

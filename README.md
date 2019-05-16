@@ -1,20 +1,20 @@
 # snowboard
 
 [![Build Status](https://travis-ci.org/bukalapak/snowboard.svg?branch=master)](https://travis-ci.org/bukalapak/snowboard)
-[![GoDoc](https://godoc.org/github.com/bukalapak/snowboard?status.svg)](https://godoc.org/github.com/bukalapak/snowboard)
+[![GoDoc](https://godoc.org/github.com/kppk/snowboard?status.svg)](https://godoc.org/github.com/kppk/snowboard)
 [![Docker Repository on Quay](https://quay.io/repository/bukalapak/snowboard/status)](https://quay.io/repository/bukalapak/snowboard)
-[![GitHub release](https://img.shields.io/github/release/bukalapak/snowboard.svg)](https://github.com/bukalapak/snowboard)
+[![GitHub release](https://img.shields.io/github/release/bukalapak/snowboard.svg)](https://github.com/kppk/snowboard)
 
 API blueprint toolkit.
 
 ## Installation
 
-The latest executables for supported platforms are available from the [release page](https://github.com/bukalapak/snowboard/releases).
+The latest executables for supported platforms are available from the [release page](https://github.com/kppk/snowboard/releases).
 
 Just extract and start using it:
 
 ```
-$ wget https://github.com/bukalapak/snowboard/releases/download/${version}/snowboard-${version}.${os}-${arch}.tar.gz
+$ wget https://github.com/kppk/snowboard/releases/download/${version}/snowboard-${version}.${os}-${arch}.tar.gz
 $ tar -zxvf snowboard-${version}.${os}-${arch}.tar.gz
 $ ./snowboard -h
 ```
@@ -56,7 +56,7 @@ $ docker run -it --rm -v $PWD:/doc quay.io/bukalapak/snowboard html -o output.ht
 ### Manual
 
 ```sh
-$ git clone https://github.com/bukalapak/snowboard.git
+$ git clone https://github.com/kppk/snowboard.git
 $ cd snowboard
 $ make install
 ```
@@ -262,8 +262,8 @@ GLOBAL OPTIONS:
 
 You can see examples of `snowboard` default template outputs, in [examples/alpha](examples/alpha) directory. They looks like:
 
-- [Named Resource and Actions](https://htmlpreview.github.io/?https://github.com/bukalapak/snowboard/blob/master/examples/alpha/03.%20Named%20Resource%20and%20Actions.html)
-- [Real World API](https://htmlpreview.github.io/?https://github.com/bukalapak/snowboard/blob/master/examples/alpha/Real%20World%20API.html)
+- [Named Resource and Actions](https://htmlpreview.github.io/?https://github.com/kppk/snowboard/blob/master/examples/alpha/03.%20Named%20Resource%20and%20Actions.html)
+- [Real World API](https://htmlpreview.github.io/?https://github.com/kppk/snowboard/blob/master/examples/alpha/Real%20World%20API.html)
 - And many more...
 
 All of the examples are generated from official [API Blueprint examples](https://github.com/apiaryio/api-blueprint/tree/master/examples)

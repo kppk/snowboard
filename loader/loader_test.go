@@ -3,7 +3,7 @@ package loader_test
 import (
 	"testing"
 
-	"github.com/bukalapak/snowboard/loader"
+	"github.com/kppk/snowboard/loader"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bukalapak/snowboard/adapter/drafter"
+	"github.com/kppk/snowboard/adapter/drafter"
 	"github.com/stretchr/testify/assert"
 )
 
