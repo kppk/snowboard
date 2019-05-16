@@ -16,7 +16,6 @@ import (
 
 	"github.com/kppk/snowboard/adapter/drafter"
 	"github.com/kppk/snowboard/api"
-	"github.com/kppk/snowboard/fn"
 	"github.com/kppk/snowboard/loader"
 	"github.com/kppk/snowboard/mock"
 	snowboard "github.com/kppk/snowboard/parser"
