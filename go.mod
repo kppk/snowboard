@@ -1,4 +1,4 @@
-module github.com/bukalapak/snowboard
+module github.com/kppk/snowboard
 
 go 1.12
 
